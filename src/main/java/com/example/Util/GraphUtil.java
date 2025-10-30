@@ -1,110 +1,80 @@
 package com.example.Util;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
 import com.google.gson.*;
+import java.io.*;
+import java.util.*;
 
-/**
- * Утилиты для загрузки и преобразования графов.
- * Формат входного JSON:
- * {
- * "nodes": 5,
- * "edges": [
- * {"from": 0, "to": 1, "weight": 3},
- * {"from": 1, "to": 2, "weight": 2}
- * ]
- * }
- */
 public class GraphUtil {
 
-    // ====== 1. Загрузка графа ======
-    public static Map<Integer, List<Integer>> loadGraph(String filePath) {
-        Map<Integer, List<Integer>> graph = new HashMap<>();
-        try (FileReader reader = new FileReader(filePath)) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            int n = json.get("nodes").getAsInt();
+    public static class Edge {
+        public int from;
+        public int to;
+        public double weight;
 
-            for (int i = 0; i < n; i++) {
-                graph.put(i, new ArrayList<>());
-            }
-
-            JsonArray edges = json.getAsJsonArray("edges");
-            for (JsonElement e : edges) {
-                JsonObject edge = e.getAsJsonObject();
-                int from = edge.get("from").getAsInt();
-                int to = edge.get("to").getAsInt();
-                graph.get(from).add(to);
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("Ошибка при загрузке графа: " + e.getMessage());
+        public Edge(int f, int t, double w) {
+            this.from = f;
+            this.to = t;
+            this.weight = w;
         }
-        return graph;
     }
 
-    // ====== 2. Загрузка взвешенного графа ======
-    public static Map<Integer, List<int[]>> loadWeightedGraph(String filePath) {
-        Map<Integer, List<int[]>> graph = new HashMap<>();
-        try (FileReader reader = new FileReader(filePath)) {
+    public static Map<Integer, List<Edge>> loadGraph(String path) {
+        try (Reader reader = new FileReader(path)) {
             JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
-            int n = json.get("nodes").getAsInt();
 
-            for (int i = 0; i < n; i++) {
-                graph.put(i, new ArrayList<>());
+            // Читаем вершины
+            JsonArray nodesArr = json.getAsJsonArray("nodes");
+            Set<Integer> nodes = new HashSet<>();
+            for (JsonElement e : nodesArr) {
+                nodes.add(e.getAsInt());
             }
 
-            JsonArray edges = json.getAsJsonArray("edges");
-            for (JsonElement e : edges) {
-                JsonObject edge = e.getAsJsonObject();
+            // Читаем рёбра
+            JsonArray edgesArr = json.getAsJsonArray("edges");
+            Map<Integer, List<Edge>> graph = new HashMap<>();
+            for (int node : nodes)
+                graph.put(node, new ArrayList<>());
+
+            for (JsonElement el : edgesArr) {
+                JsonObject edge = el.getAsJsonObject();
                 int from = edge.get("from").getAsInt();
                 int to = edge.get("to").getAsInt();
-                int weight = edge.has("weight") ? edge.get("weight").getAsInt() : 1;
-                graph.get(from).add(new int[] { to, weight });
+                double w = edge.has("weight") ? edge.get("weight").getAsDouble() : 1.0;
+                graph.get(from).add(new Edge(from, to, w));
             }
 
+            return graph;
+
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка при загрузке взвешенного графа: " + e.getMessage());
+            throw new RuntimeException("Не удалось прочитать файл графа: " + path, e);
         }
-        return graph;
     }
 
-    // ====== 3. Построение конденсации ======
     public static Map<Integer, List<Integer>> buildCondensation(
             Map<Integer, List<Integer>> graph,
             List<List<Integer>> sccs) {
 
         Map<Integer, Integer> compId = new HashMap<>();
         for (int i = 0; i < sccs.size(); i++) {
-            for (int node : sccs.get(i)) {
-                compId.put(node, i);
-            }
-        }
-
-        Map<Integer, Set<Integer>> dagSet = new HashMap<>();
-        for (int i = 0; i < sccs.size(); i++)
-            dagSet.put(i, new HashSet<>());
-
-        for (int u : graph.keySet()) {
-            for (int v : graph.get(u)) {
-                int cu = compId.get(u);
-                int cv = compId.get(v);
-                if (cu != cv)
-                    dagSet.get(cu).add(cv);
-            }
+            for (int v : sccs.get(i))
+                compId.put(v, i);
         }
 
         Map<Integer, List<Integer>> dag = new HashMap<>();
-        for (int i = 0; i < sccs.size(); i++) {
-            dag.put(i, new ArrayList<>(dagSet.get(i)));
+        for (int i = 0; i < sccs.size(); i++)
+            dag.put(i, new ArrayList<>());
+
+        for (var entry : graph.entrySet()) {
+            int u = entry.getKey();
+            for (int v : entry.getValue()) {
+                int cu = compId.get(u);
+                int cv = compId.get(v);
+                if (cu != cv && !dag.get(cu).contains(cv))
+                    dag.get(cu).add(cv);
+            }
         }
+
         return dag;
     }
 
-    // ====== 4. Красивый вывод ======
-    public static void printGraph(Map<Integer, List<Integer>> g) {
-        for (int u : g.keySet()) {
-            System.out.println(u + " -> " + g.get(u));
-        }
-    }
 }

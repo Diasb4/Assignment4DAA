@@ -8,36 +8,54 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        // Путь к тестовому JSON (при разработке используем исходную папку)
-        String jsonPath = "src/main/java/com/example/data/small1.json";
+        // Загружаем граф из JSON
+        String jsonPath = "src/main/java/com/example/data/medium1.json";
+        Map<Integer, List<GraphUtil.Edge>> weightedGraph = GraphUtil.loadGraph(jsonPath);
 
-        Map<Integer, List<Integer>> graph = GraphUtil.loadGraph(jsonPath);
-        int n = graph.size();
+        // Преобразуем в обычный граф без весов
+        Map<Integer, List<Integer>> plainGraph = new HashMap<>();
+        for (var entry : weightedGraph.entrySet()) {
+            List<Integer> targets = new ArrayList<>();
+            for (GraphUtil.Edge e : entry.getValue()) {
+                targets.add(e.to);
+            }
+            plainGraph.put(entry.getKey(), targets);
+        }
 
-        KosarajuSCC kosaraju = new KosarajuSCC(graph, n);
-        List<List<Integer>> sccs = kosaraju.run(n);
+        int n = plainGraph.size();
+
+        // Находим сильно связные компоненты
+        KosarajuSCC kosaraju = new KosarajuSCC(plainGraph, n);
+        List<List<Integer>> sccs = kosaraju.run();
 
         System.out.println("SCCs:");
         for (List<Integer> comp : sccs)
             System.out.println(comp);
 
-        Map<Integer, List<Integer>> dag = GraphUtil.buildCondensation(graph, sccs);
-        List<Integer> topo = KahnTopo.sort(dag, dag.size());
+        // Строим конденсацию графа
+        Map<Integer, List<Integer>> dag = GraphUtil.buildCondensation(plainGraph, sccs);
+        System.out.println("\nCondensation graph (DAG): " + dag);
 
+        // Топологическая сортировка
+        List<Integer> topo = KahnTopo.sort(dag, dag.size());
         System.out.println("Topo order: " + topo);
 
-        // добавь веса для теста
-        Map<Integer, List<int[]>> weighted = new HashMap<>();
+        // Добавим веса для теста на DAG
+        Map<Integer, List<int[]>> weightedDag = new HashMap<>();
         for (int i = 0; i < dag.size(); i++)
-            weighted.put(i, new ArrayList<>());
-        weighted.get(0).add(new int[] { 1, 2 });
-        weighted.get(1).add(new int[] { 2, 3 });
+            weightedDag.put(i, new ArrayList<>());
 
-        var result = DAGShortestPath.shortest(weighted, dag.size(), 0, topo);
-        System.out.println("Distances: " + Arrays.toString(result.dist));
+        // Примерные рёбра
+        weightedDag.get(0).add(new int[] { 1, 2 });
+        weightedDag.get(1).add(new int[] { 2, 3 });
+        weightedDag.get(0).add(new int[] { 2, 5 });
 
-        var longest = DAGShortestPath.shortest(weighted, dag.size(), 0, topo); // longest() not implemented; reuse
-                                                                               // shortest for demo
-        System.out.println("Longest path (demo): " + Arrays.toString(longest.dist));
+        // Короткие пути в DAG
+        var result = DAGShortestPath.shortest(weightedDag, dag.size(), 0, topo);
+        System.out.println("\nShortest distances: " + Arrays.toString(result.dist));
+
+        // "Longest path" — для примера используем ту же функцию, инвертировав веса
+        var longest = DAGShortestPath.longest(weightedDag, dag.size(), 0, topo);
+        System.out.println("Longest distances: " + Arrays.toString(longest.dist));
     }
 }

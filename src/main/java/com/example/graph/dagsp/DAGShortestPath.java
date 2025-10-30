@@ -41,4 +41,25 @@ public class DAGShortestPath {
         Collections.reverse(path);
         return path;
     }
+
+    public static Result longest(Map<Integer, List<int[]>> graph, int n, int src, List<Integer> topo) {
+        double[] dist = new double[n];
+        Arrays.fill(dist, Double.NEGATIVE_INFINITY);
+        dist[src] = 0;
+
+        for (int u : topo) {
+            if (dist[u] != Double.NEGATIVE_INFINITY) {
+                for (int[] edge : graph.getOrDefault(u, List.of())) {
+                    int v = edge[0], w = edge[1];
+                    if (dist[v] < dist[u] + w)
+                        dist[v] = dist[u] + w;
+                }
+            }
+        }
+
+        Result res = new Result();
+        res.dist = dist;
+        return res;
+    }
+
 }
