@@ -1,0 +1,73 @@
+{
+    "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+    ],
+    "edges": [
+        {
+            "from": 0,
+            "to": 1,
+            "weight": 3
+        },
+        {
+            "from": 1,
+            "to": 2,
+            "weight": 2
+        },
+        {
+            "from": 2,
+            "to": 0,
+            "weight": 4
+        },
+        {
+            "from": 3,
+            "to": 4,
+            "weight": 1
+        },
+        {
+            "from": 4,
+            "to": 5,
+            "weight": 2
+        },
+        {
+            "from": 5,
+            "to": 3,
+            "weight": 1
+        },
+        {
+            "from": 2,
+            "to": 6,
+            "weight": 2
+        },
+        {
+            "from": 6,
+            "to": 7,
+            "weight": 3
+        },
+        {
+            "from": 7,
+            "to": 8,
+            "weight": 1
+        },
+        {
+            "from": 8,
+            "to": 9,
+            "weight": 5
+        },
+        {
+            "from": 9,
+            "to": 10,
+            "weight": 2
+        }
+    ],
+    "description": "A medium-sized directed graph with 11 nodes and weighted edges."
+}
