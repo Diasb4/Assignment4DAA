@@ -5,57 +5,70 @@ import com.example.graph.scc.KosarajuSCC;
 import com.example.graph.topo.KahnTopo;
 import com.example.graph.dagsp.DAGShortestPath;
 import java.util.*;
+import java.io.File;
 
 public class Main {
     public static void main(String[] args) {
-        // Загружаем граф из JSON
-        String jsonPath = "src/main/java/com/example/data/medium1.json";
-        Map<Integer, List<GraphUtil.Edge>> weightedGraph = GraphUtil.loadGraph(jsonPath);
+        // Папка, где лежат все твои графы
+        String folderPath = "demo\\src\\main\\java\\com\\example\\data";
+        File folder = new File(folderPath);
 
-        // Преобразуем в обычный граф без весов
-        Map<Integer, List<Integer>> plainGraph = new HashMap<>();
-        for (var entry : weightedGraph.entrySet()) {
-            List<Integer> targets = new ArrayList<>();
-            for (GraphUtil.Edge e : entry.getValue()) {
-                targets.add(e.to);
-            }
-            plainGraph.put(entry.getKey(), targets);
+        if (!folder.exists() || !folder.isDirectory()) {
+            System.err.println("Папка с графами не найдена: " + folderPath);
+            return;
         }
 
-        int n = plainGraph.size();
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files == null || files.length == 0) {
+            System.err.println("В папке нет JSON-файлов с графами.");
+            return;
+        }
 
-        // Находим сильно связные компоненты
-        KosarajuSCC kosaraju = new KosarajuSCC(plainGraph, n);
-        List<List<Integer>> sccs = kosaraju.run();
+        // Перебор всех JSON-графов
+        for (File file : files) {
+            System.out.println("\n===============================");
+            System.out.println("Обработка графа: " + file.getName());
+            System.out.println("===============================");
 
-        System.out.println("SCCs:");
-        for (List<Integer> comp : sccs)
-            System.out.println(comp);
+            // Загружаем граф
+            Map<Integer, List<GraphUtil.Edge>> graph = GraphUtil.loadGraph(file.getPath());
+            int n = graph.size();
 
-        // Строим конденсацию графа
-        Map<Integer, List<Integer>> dag = GraphUtil.buildCondensation(plainGraph, sccs);
-        System.out.println("\nCondensation graph (DAG): " + dag);
+            // Преобразуем в "плоский" граф без весов для SCC
+            Map<Integer, List<Integer>> plainGraph = new HashMap<>();
+            for (var entry : graph.entrySet()) {
+                List<Integer> targets = new ArrayList<>();
+                for (GraphUtil.Edge e : entry.getValue()) {
+                    targets.add(e.to);
+                }
+                plainGraph.put(entry.getKey(), targets);
+            }
 
-        // Топологическая сортировка
-        List<Integer> topo = KahnTopo.sort(dag, dag.size());
-        System.out.println("Topo order: " + topo);
+            // Поиск компонент сильной связности
+            KosarajuSCC kosaraju = new KosarajuSCC(plainGraph, n);
+            List<List<Integer>> sccs = kosaraju.run();
+            System.out.println("SCCs:");
+            for (List<Integer> comp : sccs)
+                System.out.println(comp);
 
-        // Добавим веса для теста на DAG
-        Map<Integer, List<int[]>> weightedDag = new HashMap<>();
-        for (int i = 0; i < dag.size(); i++)
-            weightedDag.put(i, new ArrayList<>());
+            // Конденсация
+            Map<Integer, List<Integer>> dag = GraphUtil.buildCondensation(plainGraph, sccs);
+            System.out.println("\nCondensation graph (DAG): " + dag);
 
-        // Примерные рёбра
-        weightedDag.get(0).add(new int[] { 1, 2 });
-        weightedDag.get(1).add(new int[] { 2, 3 });
-        weightedDag.get(0).add(new int[] { 2, 5 });
+            // Топологическая сортировка
+            List<Integer> topo = KahnTopo.sort(dag, dag.size());
+            System.out.println("Topo order: " + topo);
 
-        // Короткие пути в DAG
-        var result = DAGShortestPath.shortest(weightedDag, dag.size(), 0, topo);
-        System.out.println("\nShortest distances: " + Arrays.toString(result.dist));
+            // Примерные веса для DAG
+            Map<Integer, List<int[]>> weighted = new HashMap<>();
+            for (int i = 0; i < dag.size(); i++)
+                weighted.put(i, new ArrayList<>());
+            for (int i = 0; i < dag.size() - 1; i++)
+                weighted.get(i).add(new int[] { i + 1, i + 2 });
 
-        // "Longest path" — для примера используем ту же функцию, инвертировав веса
-        var longest = DAGShortestPath.longest(weightedDag, dag.size(), 0, topo);
-        System.out.println("Longest distances: " + Arrays.toString(longest.dist));
+            // Кратчайшие пути (DAGShortestPath)
+            var result = DAGShortestPath.shortest(weighted, dag.size(), 0, topo);
+            System.out.println("Shortest distances: " + Arrays.toString(result.dist));
+        }
     }
 }
