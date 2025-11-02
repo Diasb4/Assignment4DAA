@@ -1,0 +1,33 @@
+{
+  "source_file": "small2.json",
+  "SCCs": [
+    [
+      0,
+      2,
+      1
+    ],
+    [
+      3,
+      5,
+      4
+    ]
+  ],
+  "DAG": {
+    "0": [
+      1
+    ],
+    "1": []
+  },
+  "topo_order": [
+    0,
+    1
+  ],
+  "shortest_distances": [
+    0.0,
+    2.0
+  ],
+  "predecessors": [
+    -1,
+    0
+  ]
+}

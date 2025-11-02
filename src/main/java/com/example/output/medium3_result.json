@@ -1,0 +1,30 @@
+{
+  "source_file": "medium3.json",
+  "SCCs": [
+    [
+      0,
+      10,
+      9,
+      2,
+      1,
+      8,
+      3,
+      7,
+      6,
+      5,
+      4
+    ]
+  ],
+  "DAG": {
+    "0": []
+  },
+  "topo_order": [
+    0
+  ],
+  "shortest_distances": [
+    0.0
+  ],
+  "predecessors": [
+    -1
+  ]
+}
