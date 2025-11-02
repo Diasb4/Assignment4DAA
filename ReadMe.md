@@ -1,6 +1,6 @@
 # Smart Campus — Assignment 4
 
-## Что реализовано
+## What is implemented
 - SCC (Kosaraju)
 - Condensation graph build
 - Topological ordering (Kahn)
@@ -9,27 +9,27 @@
 - Metrics counters and timing hooks
 - JUnit tests under src/test/java
 
-## Запуск
-1. Сборка:
+## Launch
+1. Assembly:
    mvn clean package
-2. Генерация датасетов:
-   mvn -q exec:java -Dexec.mainClass="com.example.Util.DataGenerator"
-   Датасеты появятся в /data
-3. Прогон всех датасетов:
-   mvn -q exec:java -Dexec.mainClass="com.example.Main"
+2. Dataset generation:
+mvn -q exec:java -Dexec.mainClass="com.example.Util.DataGenerator"
+   Datasets will appear in /data
+3. Run through all datasets:
+mvn -q exec:java -Dexec.mainClass="com.example.Main"
 
-## Формат данных
+## Data format
 JSON:
 {
-  "nodes": [0,1,2,...]  или "nodes": n
-  "edges": [{"from":u,"to":v,"weight":w}, ...]
+  "nodes": [0,1,2,...] or "nodes": n
+"edges": [{"from":u,"to":v,"weight":w}, ...]
 }
 
-## Выбор модели
-Используется модель **edge weights** (веса на рёбрах). Кратчайшие и длиннейшие пути считаются по сумме весов рёбер.
+## Model selection
+The **edge weights** model is used. The shortest and longest paths are calculated based on the sum of the edge weights.
 
-## Тесты
-mvn test
+##
+mvn test tests
 
-## Отчёт
-README.md содержит инструкции, PDF-отчёт находится в /report/report.pdf или /report/README.md с таблицами времени и метрик.
+## Report
+README.md It contains instructions, and the PDF report is located in /report/report.pdf or /report/README.md with tables of time and metrics.
